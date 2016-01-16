@@ -107,7 +107,7 @@ removealiases() {
         fi
         let i=i+1
     done
-}        
+}
 
 loadconfig() {
     [ -f "$DOTFILE" ] && source "$DOTFILE"
@@ -206,8 +206,19 @@ upload() {
     else
         printf %b "Uploaded $FILE"
         echo $UPLOAD | grep -o 'photoid>[[:digit:]]*<' | tr '<>' ' ' | awk '{ print " with photoid", $2 }'
+        PHOTOID=`echo $UPLOAD | grep -o 'photoid>[[:digit:]]*<' | tr '<>' ' ' |cut -d " " -f 2`
+        original_url $PHOTOID
     fi
     rm -f $TMPFILE
+}
+
+original_url() {
+    # Return the original file url given a photoid
+    PHOTOID=$1
+    SIZES=$(curl -s --tlsv1 "https://api.flickr.com/services/rest/?method=flickr.photos.getSizes&format=rest&api_key=${APIKEY}&photo_id=${PHOTOID}")
+    URL=$(echo $SIZES | grep -o -P 'label="Original".*?source=".*?"' |
+                 grep -o -P 'source=".*"' | tr '"' ' '|cut -d " " -f 2)
+    echo $URL
 }
 
 # We need these tools to run
